@@ -294,6 +294,7 @@
         (pdf--croak "Unterminated hex string")))))
 
 (defun pdf--read-xref-section (start count)
+  (ignore count)
   (cl-loop while (looking-at "\\([[:digit:]]\\{10\\}\\) \\([[:digit:]]\\{5\\}\\) \\([fn]\\)[[:space:]\n]*$")
            collect `((type . xref-section)
                      (offset . ,(match-beginning 0))
@@ -493,6 +494,7 @@ this mode with <escape> or C-g."
   (pdf-forget-highlighting)
   (pdf-dig-at-point
    (lambda (path defs refs pages)
+     (ignore pages)
      (when path
        (let ((node (car path)))
          (cl-case (pdf.type node)
@@ -534,6 +536,7 @@ section (i.e. 0000000234 00000 f)."
   (interactive)
   (pdf-dig-at-point
    (lambda (path defs refs pages)
+     (ignore refs pages)
      (unless (when path
                (let ((node (car path)))
                  (cl-case (pdf.type node)
@@ -585,6 +588,7 @@ section (i.e. 0000000234 00000 f)."
                (delete-region (pdf.offset x) (pdf.end x)))))
     (pdf--toplevel-objects
      (lambda (nodes objects xref startxref trailer)
+       (ignore nodes)
        (unless trailer
          (error "No trailer found."))
        (let ((trailer-code (buffer-substring-no-properties
@@ -620,9 +624,11 @@ good idea, but I got into it."
   "Removes any objects that are not referenced."
   (pdf-dig-at-point
    (lambda (path defs refs pages)
+     (ignore path pages)
      (let ((count 0)
            (objects '()))
        (maphash (lambda (key val)
+                  (ignore key)
                   (push val objects))
                 defs)
        (pdf--do-reverse objects
@@ -689,6 +695,7 @@ occur if the stream is not really compressed.  If there's a
   (interactive)
   (pdf-dig-at-point
    (lambda (path &rest ignore)
+     (ignore ignore)
      (let ((stream (cl-loop for i in path when (pdf.stream i) do (cl-return it))))
        (if stream
            (save-excursion
@@ -700,6 +707,7 @@ occur if the stream is not really compressed.  If there's a
 (defun pdf--edge-of-thing (edge cmp)
   (pdf-dig-at-point
    (lambda (path &rest ignore)
+     (ignore ignore)
      (cl-loop for i in path
               for offset = (funcall edge i)
               when (funcall cmp offset (point))
@@ -719,6 +727,7 @@ occur if the stream is not really compressed.  If there's a
   "Mark thing at point.  Consecutive calls will extend region to
 contain the parent node."
   (interactive "r")
+  (ignore start)
   (unless (use-region-p)
     (setf start (point)
           end (point)))
@@ -746,6 +755,7 @@ the maximum ID among objects in the buffer."
   (interactive "P")
   (pdf--toplevel-objects
    (lambda (nodes objects &rest ignore)
+     (ignore nodes ignore)
      (let ((max-id (cl-reduce #'max objects :key #'pdf.id :initial-value 0)))
        (insert (format (if stream
                            *pdf--new-stream-template*
@@ -765,6 +775,7 @@ the maximum ID among objects in the buffer."
 
 (defun pdf-fontify-region (begin end)
   (interactive "r")
+  (ignore begin)
   (search-backward-regexp *pdf--rx-object* nil t)
   (while (looking-back "[[:digit:]]" nil)
     (backward-char 1))
@@ -786,6 +797,7 @@ the maximum ID among objects in the buffer."
 (make-variable-buffer-local 'next-error-function)
 
 (defun pdf--buffer-change-hook (&rest ignore)
+  (ignore ignore)
   (setf *pdf--needs-fontification* t)
   (setf *pdf--ast* nil))
 
