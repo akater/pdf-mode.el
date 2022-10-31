@@ -155,7 +155,7 @@
             ;; (remove-text-properties start (match-beginning 1)
             ;;                         '(display nil))
             (goto-char (match-beginning 1))
-            (when (and (looking-back "^")
+            (when (and (looking-back "^" nil)
                        (> curlen 0))
               (cl-decf curlen))
             (goto-char end)
@@ -751,7 +751,7 @@ the maximum ID among objects in the buffer."
                            *pdf--new-stream-template*
                          *pdf--new-object-template*) (+ max-id 1)))
        (search-backward "|")
-       (delete-forward-char 1)))))
+       (delete-char 1)))))
 
 (defvar *pdf--needs-fontification* nil)
 
@@ -766,7 +766,7 @@ the maximum ID among objects in the buffer."
 (defun pdf-fontify-region (begin end)
   (interactive "r")
   (search-backward-regexp *pdf--rx-object* nil t)
-  (while (looking-back "[[:digit:]]")
+  (while (looking-back "[[:digit:]]" nil)
     (backward-char 1))
   (let ((*pdf--highlight* t)
         (*pdf--no-parse-errors* t))
